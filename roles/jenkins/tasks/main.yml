@@ -1,0 +1,48 @@
+---
+
+- name: Install java 8 using yum
+  yum:
+    name: "{{java.VERSION}}"
+    state: present
+  become: true
+
+- name: Download Jenkins repo
+  get_url:
+    url: "{{jenkins.repo_URL}}"
+    dest: /etc/yum.repos.d/jenkins.repo
+  become: true
+
+- name: Import GPG key
+  rpm_key:
+    state: present
+    key: "{{jenkins.gpg_key}}"
+
+- name: Cretae initialization scripts directory
+  file:
+    path=/var/lib/jenkins/init.groovy.d
+    state=directory
+    mode=0775
+
+- name: Add initialization script to setup basic security
+  template:
+    src=security.groovy.j2
+    dest=/var/lib/jenkins/init.groovy.d/security.groovy
+
+- name: Install jenkins
+  yum:
+    name: jenkins
+    state: present
+
+- name: Change jenkins JAVA options
+  lineinfile:
+    dest=/etc/sysconfig/jenkins
+    regexp=^JENKINS_JAVA_OPTIONS
+    line=JENKINS_JAVA_OPTIONS="{{jenkins.JAVA_OPTIONS}}"
+  become: true
+
+- name: Start jenkins service and enable on boot
+  service: 
+    name: jenkins
+    state: started
+    enabled: yes
+
