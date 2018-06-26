@@ -1,0 +1,40 @@
+---
+   - name: Check for jenkins process
+     shell: ps -ef | grep -v grep | grep -w "jenkins" | awk '{print $1, $2}'
+     register: Process
+                     
+   - name: Check PID of process
+     debug:
+       var: Process.stdout
+
+   - name: No process running.
+     debug:
+       msg: |
+         Jenkins not running
+     when: Process.stdout == ""
+  
+   - name: Stoping service if running
+     service:
+       name: jenkins
+       state: stopped
+     when: Process.stdout != ""
+
+   - name: Remove jenkins
+     yum:
+       name: jenkins
+       state: absent
+   
+   - name: Remove jenkins repo
+     file:
+       path: /etc/yum.repo.d/jenkins.repo
+       state: absent
+  
+   - name: Remove java
+     yum: 
+       name: "{{ java.VERSION }}"
+       state: absent
+        
+   - name: Remove jenkins directory
+     file:
+       path: /var/lib/jenkins
+       state: absent

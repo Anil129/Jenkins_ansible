@@ -1,0 +1,5 @@
+---
+# vars file for jenkins
+
+java:
+  VERSION: "java-1.8.0-openjdk"
